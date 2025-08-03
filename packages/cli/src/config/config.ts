@@ -66,15 +66,33 @@ export interface CliArgs {
   ideModeFeature: boolean | undefined;
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
+  // New command support
+  command?: string;
+  subcommand?: string;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
   const yargsInstance = yargs(hideBin(process.argv))
     .scriptName('gemini')
     .usage(
-      '$0 [options]',
+      '$0 [command] [options]',
       'Gemini CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
+    .command('config [subcommand]', 'Configure AI providers and models', (yargs) => {
+      return yargs
+        .positional('subcommand', {
+          describe: 'Configuration action',
+          choices: ['provider', 'model', 'status', 'reset'],
+        })
+        .example('$0 config', 'Open interactive configuration menu')
+        .example('$0 config provider', 'Configure AI provider')
+        .example('$0 config model', 'Select AI model')
+        .example('$0 config status', 'Show current configuration');
+    })
+    .command('setup', 'Run initial setup for AI providers', (yargs) => {
+      return yargs
+        .example('$0 setup', 'Run interactive setup wizard');
+    })
     .option('model', {
       alias: 'm',
       type: 'string',
@@ -230,9 +248,17 @@ export async function parseArguments(): Promise<CliArgs> {
   yargsInstance.wrap(yargsInstance.terminalWidth());
   const result = yargsInstance.parseSync();
 
+  // Extract command and subcommand from yargs
+  const command = result._?.[0];
+  const subcommand = result._?.[1];
+
   // The import format is now only controlled by settings.memoryImportFormat
   // We no longer accept it as a CLI argument
-  return result as CliArgs;
+  return {
+    ...result,
+    command,
+    subcommand,
+  } as CliArgs;
 }
 
 // This function is now a thin wrapper around the server's implementation.

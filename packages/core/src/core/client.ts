@@ -22,7 +22,7 @@ import {
   ChatCompressionInfo,
 } from './turn.js';
 import { Config } from '../config/config.js';
-import { UserTierId } from '../code_assist/types.js';
+import { UserTierId } from '../types/user-tier.js';
 import { getCoreSystemPrompt, getCompressionPrompt } from './prompts.js';
 import { ReadManyFilesTool } from '../tools/read-many-files.js';
 import { getResponseText } from '../utils/generateContentResponseUtilities.js';

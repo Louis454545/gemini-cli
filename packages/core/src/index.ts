@@ -19,10 +19,14 @@ export * from './core/geminiRequest.js';
 export * from './core/coreToolScheduler.js';
 export * from './core/nonInteractiveToolExecutor.js';
 
-export * from './code_assist/codeAssist.js';
-export * from './code_assist/oauth2.js';
-export * from './code_assist/server.js';
-export * from './code_assist/types.js';
+// Legacy code_assist exports removed - use new provider system instead
+export { UserTierId } from './types/user-tier.js';
+export * from './providers/base-provider.js';
+export * from './providers/google-provider.js';
+export * from './providers/provider-registry.js';
+export * from './config/ai-config.js';
+export * from './core/ai-content-generator.js';
+export * from './setup/ai-setup.js';
 
 // Export utilities
 export * from './utils/paths.js';

@@ -176,6 +176,34 @@ export async function main() {
     process.exit(0);
   }
 
+  // Handle new commands
+  if (argv.command === 'config') {
+    const { ConfigCommand } = await import('./commands/config-command.js');
+    const instance = render(
+      <React.StrictMode>
+        <ConfigCommand 
+          subcommand={argv.subcommand as 'provider' | 'model' | 'status' | 'reset' | undefined}
+          onExit={(code) => process.exit(code)}
+        />
+      </React.StrictMode>,
+      { exitOnCtrlC: true }
+    );
+    registerCleanup(() => instance.unmount());
+    return;
+  }
+
+  if (argv.command === 'setup') {
+    const { SetupCommand } = await import('./commands/setup-command.js');
+    const instance = render(
+      <React.StrictMode>
+        <SetupCommand onExit={(code) => process.exit(code)} />
+      </React.StrictMode>,
+      { exitOnCtrlC: true }
+    );
+    registerCleanup(() => instance.unmount());
+    return;
+  }
+
   // Set a default auth type if one isn't set.
   if (!settings.merged.selectedAuthType) {
     if (process.env.CLOUD_SHELL === 'true') {
@@ -190,6 +218,16 @@ export async function main() {
   setMaxSizedBoxDebugging(config.getDebugMode());
 
   await config.initialize();
+
+  // Initialize AI system and handle environment variable migration
+  const { migrateEnvironmentVariables, isMigrationNeeded } = await import('@google/gemini-cli-core/config/env-migration.js');
+  
+  if (isMigrationNeeded()) {
+    const migrated = await migrateEnvironmentVariables();
+    if (migrated) {
+      console.log('Successfully migrated environment variables to new AI system.');
+    }
+  }
 
   // Load custom themes from settings
   themeManager.loadCustomThemes(settings.merged.customThemes);

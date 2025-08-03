@@ -23,7 +23,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { parse } from 'shell-quote';
 import { AuthProviderType, MCPServerConfig } from '../config/config.js';
-import { GoogleCredentialProvider } from '../mcp/google-auth-provider.js';
+// GoogleCredentialProvider removed - use new provider system instead
 import { DiscoveredMCPTool } from './mcp-tool.js';
 
 import { FunctionDeclaration, mcpToTool } from '@google/genai';
@@ -931,11 +931,12 @@ export async function createTransport(
   if (
     mcpServerConfig.authProviderType === AuthProviderType.GOOGLE_CREDENTIALS
   ) {
-    const provider = new GoogleCredentialProvider(mcpServerConfig);
+    // Google credential provider removed - fallback to no auth
+    console.warn('Google credential provider is no longer supported. Please update your MCP server configuration.');
     const transportOptions:
       | StreamableHTTPClientTransportOptions
       | SSEClientTransportOptions = {
-      authProvider: provider,
+      authProvider: undefined,
     };
     if (mcpServerConfig.httpUrl) {
       return new StreamableHTTPClientTransport(
