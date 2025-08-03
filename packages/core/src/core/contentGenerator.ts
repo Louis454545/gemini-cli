@@ -11,34 +11,15 @@ import {
   CountTokensParameters,
   EmbedContentResponse,
   EmbedContentParameters,
-  GoogleGenAI,
-} from '@google/genai';
-import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
+} from '../types/legacy-genai-types.js';
 import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import { Config } from '../config/config.js';
 import { getEffectiveModel } from './modelCheck.js';
-import { UserTierId } from '../code_assist/types.js';
+import { UserTierId } from '../types/user-tier.js';
 
-/**
- * Interface abstracting the core functionalities for generating content and counting tokens.
- */
-export interface ContentGenerator {
-  generateContent(
-    request: GenerateContentParameters,
-    userPromptId: string,
-  ): Promise<GenerateContentResponse>;
-
-  generateContentStream(
-    request: GenerateContentParameters,
-    userPromptId: string,
-  ): Promise<AsyncGenerator<GenerateContentResponse>>;
-
-  countTokens(request: CountTokensParameters): Promise<CountTokensResponse>;
-
-  embedContent(request: EmbedContentParameters): Promise<EmbedContentResponse>;
-
-  userTier?: UserTierId;
-}
+// Re-export from the adapter for backward compatibility  
+import type { ContentGenerator as ContentGeneratorType } from './content-generator-adapter.js';
+export type ContentGenerator = ContentGeneratorType;
 
 export enum AuthType {
   LOGIN_WITH_GOOGLE = 'oauth-personal',
@@ -111,38 +92,24 @@ export async function createContentGenerator(
   gcConfig: Config,
   sessionId?: string,
 ): Promise<ContentGenerator> {
-  const version = process.env.CLI_VERSION || process.version;
-  const httpOptions = {
-    headers: {
-      'User-Agent': `GeminiCLI/${version} (${process.platform}; ${process.arch})`,
-    },
-  };
-  if (
-    config.authType === AuthType.LOGIN_WITH_GOOGLE ||
-    config.authType === AuthType.CLOUD_SHELL
-  ) {
-    return createCodeAssistContentGenerator(
-      httpOptions,
-      config.authType,
-      gcConfig,
-      sessionId,
+  // Import the adapter and new AI system
+  const { ContentGeneratorAdapter } = await import('./content-generator-adapter.js');
+  const { aiContentGenerator } = await import('./ai-content-generator.js');
+  const { migrateEnvironmentVariables } = await import('../config/env-migration.js');
+  
+  // Try to migrate environment variables if needed
+  await migrateEnvironmentVariables();
+  
+  // Initialize the AI content generator
+  await aiContentGenerator.initializeFromConfig();
+  
+  // Check if the AI system is ready
+  if (!aiContentGenerator.isReady()) {
+    throw new Error(
+      'AI provider not configured. Please run "gemini setup" or "gemini config provider" to configure an AI provider.',
     );
   }
-
-  if (
-    config.authType === AuthType.USE_GEMINI ||
-    config.authType === AuthType.USE_VERTEX_AI
-  ) {
-    const googleGenAI = new GoogleGenAI({
-      apiKey: config.apiKey === '' ? undefined : config.apiKey,
-      vertexai: config.vertexai,
-      httpOptions,
-    });
-
-    return googleGenAI.models;
-  }
-
-  throw new Error(
-    `Error creating contentGenerator: Unsupported authType: ${config.authType}`,
-  );
+  
+  // Return adapter that works with the old interface
+  return new ContentGeneratorAdapter();
 }

@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { BaseTool, Icon, ToolResult } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { Config, DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
@@ -174,7 +174,7 @@ export class LSTool extends BaseTool<LSToolParams, ToolResult> {
   // Helper for consistent error formatting
   private errorResult(llmContent: string, returnDisplay: string): ToolResult {
     return {
-      llmContent,
+      llmContent: [{ text: llmContent }],
       // Keep returnDisplay simpler in core logic
       returnDisplay: `Error: ${returnDisplay}`,
     };
@@ -239,7 +239,7 @@ export class LSTool extends BaseTool<LSToolParams, ToolResult> {
       if (files.length === 0) {
         // Changed error message to be more neutral for LLM
         return {
-          llmContent: `Directory ${params.path} is empty.`,
+          llmContent: [{ text: `Directory ${params.path} is empty.` }],
           returnDisplay: `Directory is empty.`,
         };
       }
@@ -318,7 +318,7 @@ export class LSTool extends BaseTool<LSToolParams, ToolResult> {
       }
 
       return {
-        llmContent: resultMessage,
+        llmContent: [{ text: resultMessage }],
         returnDisplay: displayMessage,
       };
     } catch (error) {

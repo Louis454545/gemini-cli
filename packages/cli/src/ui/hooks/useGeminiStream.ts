@@ -27,7 +27,7 @@ import {
   UserPromptEvent,
   DEFAULT_GEMINI_FLASH_MODEL,
 } from '@google/gemini-cli-core';
-import { type Part, type PartListUnion, FinishReason } from '@google/genai';
+import { type Part, type PartListUnion, FinishReason } from '@google/gemini-cli-core/types/legacy-genai-types.js';
 import {
   StreamingState,
   HistoryItem,

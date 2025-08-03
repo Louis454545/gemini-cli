@@ -10,7 +10,7 @@ import {
   FunctionCall,
   FunctionDeclaration,
   FinishReason,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 import {
   ToolCallConfirmationDetails,
   ToolResult,

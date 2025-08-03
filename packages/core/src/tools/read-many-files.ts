@@ -16,7 +16,7 @@ import {
   DEFAULT_ENCODING,
   getSpecificMimeType,
 } from '../utils/fileUtils.js';
-import { PartListUnion, Schema, Type } from '@google/genai';
+import { PartListUnion, Schema, Type } from '../types/legacy-genai-types.js';
 import { Config, DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
 import {
   recordFileOperationMetric,
@@ -258,7 +258,7 @@ Use this tool when the user's query implies needing the content of several files
     const validationError = this.validateParams(params);
     if (validationError) {
       return {
-        llmContent: `Error: Invalid parameters for ${this.displayName}. Reason: ${validationError}`,
+        llmContent: [{ text: `Error: Invalid parameters for ${this.displayName}. Reason: ${validationError}` }],
         returnDisplay: `## Parameter Error\n\n${validationError}`,
       };
     }
@@ -296,7 +296,7 @@ Use this tool when the user's query implies needing the content of several files
     const searchPatterns = [...inputPatterns, ...include];
     if (searchPatterns.length === 0) {
       return {
-        llmContent: 'No search paths or include patterns provided.',
+        llmContent: [{ text: 'No search paths or include patterns provided.' }],
         returnDisplay: `## Information\n\nNo search paths or include patterns were specified. Nothing to read or concatenate.`,
       };
     }
@@ -406,7 +406,7 @@ Use this tool when the user's query implies needing the content of several files
       }
     } catch (error) {
       return {
-        llmContent: `Error during file search: ${getErrorMessage(error)}`,
+        llmContent: [{ text: `Error during file search: ${getErrorMessage(error)}` }],
         returnDisplay: `## File Search Error\n\nAn error occurred while searching for files:\n\`\`\`\n${getErrorMessage(error)}\n\`\`\``,
       };
     }
@@ -518,9 +518,9 @@ Use this tool when the user's query implies needing the content of several files
     }
 
     if (contentParts.length === 0) {
-      contentParts.push(
-        'No files matching the criteria were found or all were skipped.',
-      );
+              contentParts.push(
+          { text: 'No files matching the criteria were found or all were skipped.' },
+        );
     }
     return {
       llmContent: contentParts,

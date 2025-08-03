@@ -17,7 +17,7 @@ import {
   ToolConfirmationOutcome,
   Icon,
 } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { summarizeToolOutput } from '../utils/summarizer.js';
@@ -186,14 +186,14 @@ export class ShellTool extends BaseTool<ShellToolParams, ToolResult> {
     });
     if (validationError) {
       return {
-        llmContent: validationError,
+        llmContent: [{ text: validationError }],
         returnDisplay: validationError,
       };
     }
 
     if (signal.aborted) {
       return {
-        llmContent: 'Command was cancelled by user before it could start.',
+        llmContent: [{ text: 'Command was cancelled by user before it could start.' }],
         returnDisplay: 'Command cancelled by user.',
       };
     }
@@ -367,7 +367,7 @@ export class ShellTool extends BaseTool<ShellToolParams, ToolResult> {
           summarizeConfig[this.name].tokenBudget,
         );
         return {
-          llmContent: summary,
+          llmContent: [{ text: summary }],
           returnDisplay: returnDisplayMessage,
         };
       }

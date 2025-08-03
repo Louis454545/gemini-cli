@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FunctionDeclaration, PartListUnion, Schema } from '@google/genai';
+import { FunctionDeclaration, PartListUnion, Schema } from '../types/legacy-genai-types.js';
 import { ToolErrorType } from './tool-error.js';
 
 /**

@@ -7,7 +7,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Content } from '@google/genai';
+import { Content } from '../types/legacy-genai-types.js';
 
 interface ErrorReportData {
   error: { message: string; stack?: string } | { message: string };

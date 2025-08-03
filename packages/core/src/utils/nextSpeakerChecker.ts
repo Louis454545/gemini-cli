@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Content, SchemaUnion, Type } from '@google/genai';
+import { Content, SchemaUnion, Type } from '../types/legacy-genai-types.js';
 import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from '../config/models.js';
 import { GeminiClient } from '../core/client.js';
 import { GeminiChat } from '../core/geminiChat.js';

@@ -21,7 +21,7 @@ import {
   ToolConfirmationPayload,
   ToolErrorType,
 } from '../index.js';
-import { Part, PartListUnion } from '@google/genai';
+import { Part, PartListUnion } from '../types/legacy-genai-types.js';
 import { getResponseTextFromParts } from '../utils/generateContentResponseUtilities.js';
 import {
   isModifiableTool,

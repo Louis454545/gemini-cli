@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GenerateContentResponse, PartListUnion, Part } from '@google/genai';
+import { GenerateContentResponse, PartListUnion, Part } from '../types/legacy-genai-types.js';
 
 /**
  * Converts a PartListUnion into a string.

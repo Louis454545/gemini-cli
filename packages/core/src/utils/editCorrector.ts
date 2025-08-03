@@ -9,7 +9,7 @@ import {
   GenerateContentConfig,
   SchemaUnion,
   Type,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 import { GeminiClient } from '../core/client.js';
 import { EditToolParams, EditTool } from '../tools/edit.js';
 import { WriteFileTool } from '../tools/write-file.js';
