@@ -9,7 +9,7 @@ import {
   Content,
   GenerateContentConfig,
   GenerateContentResponse,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 import { GeminiClient } from '../core/client.js';
 import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from '../config/models.js';
 import { getResponseText, partToString } from './partUtils.js';

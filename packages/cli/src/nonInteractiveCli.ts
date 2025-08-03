@@ -14,7 +14,7 @@ import {
   GeminiEventType,
   ToolErrorType,
 } from '@google/gemini-cli-core';
-import { Content, Part, FunctionCall } from '@google/genai';
+import { Content, Part, FunctionCall } from '@google/gemini-cli-core/types/legacy-genai-types.js';
 
 import { parseAndFormatApiError } from './ui/utils/errorParsing.js';
 

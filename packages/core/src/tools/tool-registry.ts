@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FunctionDeclaration, Schema, Type } from '@google/genai';
+import { FunctionDeclaration, Schema, Type } from '../types/legacy-genai-types.js';
 import { Tool, ToolResult, BaseTool, Icon } from './tools.js';
 import { Config } from '../config/config.js';
 import { spawn } from 'node:child_process';

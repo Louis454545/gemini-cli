@@ -11,7 +11,7 @@ import { EOL } from 'os';
 import { spawn } from 'child_process';
 import { globStream } from 'glob';
 import { BaseTool, Icon, ToolResult } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
@@ -268,7 +268,7 @@ export class GrepTool extends BaseTool<GrepToolParams, ToolResult> {
       console.error(`Error during GrepLogic execution: ${error}`);
       const errorMessage = getErrorMessage(error);
       return {
-        llmContent: `Error during grep search operation: ${errorMessage}`,
+        llmContent: [{ text: `Error during grep search operation: ${errorMessage}` }],
         returnDisplay: `Error: ${errorMessage}`,
       };
     }

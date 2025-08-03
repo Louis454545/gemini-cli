@@ -26,7 +26,7 @@ import { AuthProviderType, MCPServerConfig } from '../config/config.js';
 // GoogleCredentialProvider removed - use new provider system instead
 import { DiscoveredMCPTool } from './mcp-tool.js';
 
-import { FunctionDeclaration, mcpToTool } from '@google/genai';
+import { FunctionDeclaration, mcpToTool } from '../types/legacy-genai-types.js';
 import { ToolRegistry } from './tool-registry.js';
 import { PromptRegistry } from '../prompts/prompt-registry.js';
 import { MCPOAuthProvider } from '../mcp/oauth-provider.js';

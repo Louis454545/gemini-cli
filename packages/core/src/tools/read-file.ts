@@ -8,7 +8,7 @@ import path from 'path';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { BaseTool, Icon, ToolLocation, ToolResult } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import {
   processSingleFileContent,
   getSpecificMimeType,
@@ -132,7 +132,7 @@ export class ReadFileTool extends BaseTool<ReadFileToolParams, ToolResult> {
     const validationError = this.validateToolParams(params);
     if (validationError) {
       return {
-        llmContent: `Error: Invalid parameters provided. Reason: ${validationError}`,
+        llmContent: [{ text: `Error: Invalid parameters provided. Reason: ${validationError}` }],
         returnDisplay: validationError,
       };
     }
@@ -146,7 +146,7 @@ export class ReadFileTool extends BaseTool<ReadFileToolParams, ToolResult> {
 
     if (result.error) {
       return {
-        llmContent: result.error, // The detailed error for LLM
+        llmContent: [{ text: result.error }], // The detailed error for LLM
         returnDisplay: result.returnDisplay || 'Error reading file', // User-friendly error
       };
     }
@@ -165,7 +165,7 @@ export class ReadFileTool extends BaseTool<ReadFileToolParams, ToolResult> {
     );
 
     return {
-      llmContent: result.llmContent || '',
+      llmContent: result.llmContent ? [result.llmContent] : [{ text: '' }],
       returnDisplay: result.returnDisplay || '',
     };
   }

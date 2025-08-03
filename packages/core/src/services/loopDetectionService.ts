@@ -9,7 +9,7 @@ import { GeminiEventType, ServerGeminiStreamEvent } from '../core/turn.js';
 import { logLoopDetected } from '../telemetry/loggers.js';
 import { LoopDetectedEvent, LoopType } from '../telemetry/types.js';
 import { Config, DEFAULT_GEMINI_FLASH_MODEL } from '../config/config.js';
-import { SchemaUnion, Type } from '@google/genai';
+import { SchemaUnion, Type } from '../types/legacy-genai-types.js';
 
 const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;

@@ -11,15 +11,15 @@ import {
   CountTokensParameters,
   EmbedContentResponse,
   EmbedContentParameters,
-  GoogleGenAI,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import { Config } from '../config/config.js';
 import { getEffectiveModel } from './modelCheck.js';
 import { UserTierId } from '../types/user-tier.js';
 
-// Re-export from the adapter for backward compatibility
-export type { ContentGenerator } from './content-generator-adapter.js';
+// Re-export from the adapter for backward compatibility  
+import type { ContentGenerator as ContentGeneratorType } from './content-generator-adapter.js';
+export type ContentGenerator = ContentGeneratorType;
 
 export enum AuthType {
   LOGIN_WITH_GOOGLE = 'oauth-personal',

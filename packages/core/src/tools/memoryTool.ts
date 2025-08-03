@@ -11,7 +11,7 @@ import {
   ToolConfirmationOutcome,
   Icon,
 } from './tools.js';
-import { FunctionDeclaration, Type } from '@google/genai';
+import { FunctionDeclaration, Type } from '../types/legacy-genai-types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { homedir } from 'os';

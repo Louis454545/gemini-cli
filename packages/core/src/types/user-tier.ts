@@ -8,4 +8,7 @@ export enum UserTierId {
   FREE = 'free',
   PAID = 'paid',
   ENTERPRISE = 'enterprise',
+  // Legacy compatibility
+  LEGACY = 'legacy',
+  STANDARD = 'standard',
 }

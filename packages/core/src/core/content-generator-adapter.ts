@@ -11,7 +11,7 @@ import {
   CountTokensParameters,
   EmbedContentResponse,
   EmbedContentParameters,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 import { aiContentGenerator } from './ai-content-generator.js';
 import { UserTierId } from '../types/user-tier.js';
 
@@ -79,32 +79,37 @@ export class ContentGeneratorAdapter implements ContentGenerator {
     } as GenerateContentResponse;
   }
 
-  async *generateContentStream(
+  async generateContentStream(
     request: GenerateContentParameters,
     userPromptId: string,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
     const prompt = this.extractPrompt(request);
     const system = this.extractSystemPrompt(request);
     
-    const stream = aiContentGenerator.streamText({
-      prompt,
-      system,
-      temperature: request.generationConfig?.temperature,
-      maxTokens: request.generationConfig?.maxOutputTokens,
-      stopSequences: request.generationConfig?.stopSequences,
-    });
+    const self = this;
+    async function* streamGenerator(): AsyncGenerator<GenerateContentResponse> {
+      const stream = aiContentGenerator.streamText({
+        prompt,
+        system,
+        temperature: request.generationConfig?.temperature,
+        maxTokens: request.generationConfig?.maxOutputTokens,
+        stopSequences: request.generationConfig?.stopSequences,
+      });
 
-    for await (const chunk of stream) {
-      yield {
-        candidates: [{
-          content: {
-            parts: [{ text: chunk }],
-            role: 'model',
-          },
-          finishReason: 'STOP',
-        }],
-      } as GenerateContentResponse;
+      for await (const chunk of stream) {
+        yield {
+          candidates: [{
+            content: {
+              parts: [{ text: chunk }],
+              role: 'model',
+            },
+            finishReason: 'STOP',
+          }],
+        } as GenerateContentResponse;
+      }
     }
+
+    return streamGenerator();
   }
 
   async countTokens(request: CountTokensParameters): Promise<CountTokensResponse> {

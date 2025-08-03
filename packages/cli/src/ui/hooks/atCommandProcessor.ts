@@ -6,7 +6,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { PartListUnion, PartUnion } from '@google/genai';
+import { PartListUnion, PartUnion } from '@google/gemini-cli-core/types/legacy-genai-types.js';
 import {
   Config,
   getErrorMessage,

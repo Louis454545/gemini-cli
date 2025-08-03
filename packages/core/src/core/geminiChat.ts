@@ -12,11 +12,11 @@ import {
   Content,
   GenerateContentConfig,
   SendMessageParameters,
-  createUserContent,
   Part,
   GenerateContentResponseUsageMetadata,
   Tool,
-} from '@google/genai';
+  createUserContent,
+} from '../types/legacy-genai-types.js';
 import { retryWithBackoff } from '../utils/retry.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
 import { ContentGenerator, AuthType } from './contentGenerator.js';

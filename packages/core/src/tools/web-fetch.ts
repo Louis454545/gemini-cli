@@ -12,7 +12,7 @@ import {
   ToolConfirmationOutcome,
   Icon,
 } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { Config, ApprovalMode } from '../config/config.js';
 import { getResponseText } from '../utils/generateContentResponseUtilities.js';
@@ -149,7 +149,7 @@ ${textContent}
       const error = e as Error;
       const errorMessage = `Error during fallback fetch for ${url}: ${error.message}`;
       return {
-        llmContent: `Error: ${errorMessage}`,
+        llmContent: [{ text: `Error: ${errorMessage}` }],
         returnDisplay: `Error: ${errorMessage}`,
       };
     }
@@ -224,7 +224,7 @@ ${textContent}
     const validationError = this.validateParams(params);
     if (validationError) {
       return {
-        llmContent: `Error: Invalid parameters provided. Reason: ${validationError}`,
+        llmContent: [{ text: `Error: Invalid parameters provided. Reason: ${validationError}` }],
         returnDisplay: validationError,
       };
     }
@@ -352,7 +352,7 @@ ${sourceListFormatted.join('\n')}`;
       )}...": ${getErrorMessage(error)}`;
       console.error(errorMessage, error);
       return {
-        llmContent: `Error: ${errorMessage}`,
+        llmContent: [{ text: `Error: ${errorMessage}` }],
         returnDisplay: `Error: ${errorMessage}`,
       };
     }

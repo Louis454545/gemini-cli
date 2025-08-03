@@ -17,7 +17,7 @@ import {
   ToolCallConfirmationDetails,
   Icon,
 } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../types/legacy-genai-types.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
@@ -207,7 +207,7 @@ export class WriteFileTool
     const validationError = this.validateToolParams(params);
     if (validationError) {
       return {
-        llmContent: `Error: Invalid parameters provided. Reason: ${validationError}`,
+        llmContent: [{ text: `Error: Invalid parameters provided. Reason: ${validationError}` }],
         returnDisplay: `Error: ${validationError}`,
       };
     }
@@ -222,7 +222,7 @@ export class WriteFileTool
       const errDetails = correctedContentResult.error;
       const errorMsg = `Error checking existing file: ${errDetails.message}`;
       return {
-        llmContent: `Error checking existing file ${params.file_path}: ${errDetails.message}`,
+        llmContent: [{ text: `Error checking existing file ${params.file_path}: ${errDetails.message}` }],
         returnDisplay: errorMsg,
       };
     }
@@ -311,7 +311,7 @@ export class WriteFileTool
     } catch (error) {
       const errorMsg = `Error writing to file: ${error instanceof Error ? error.message : String(error)}`;
       return {
-        llmContent: `Error writing to file ${params.file_path}: ${errorMsg}`,
+        llmContent: [{ text: `Error writing to file ${params.file_path}: ${errorMsg}` }],
         returnDisplay: `Error: ${errorMsg}`,
       };
     }

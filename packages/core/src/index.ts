@@ -27,6 +27,39 @@ export * from './providers/provider-registry.js';
 export * from './config/ai-config.js';
 export * from './core/ai-content-generator.js';
 export * from './setup/ai-setup.js';
+// Legacy GenAI types - export everything except Tool to avoid conflicts
+export {
+  Part,
+  FunctionCall,
+  FunctionResponse,
+  Content,
+  GenerateContentConfig,
+  GenerateContentParameters,
+  CountTokensParameters,
+  EmbedContentParameters,
+  GenerateContentResponse,
+  Candidate,
+  GenerateContentResponseUsageMetadata,
+  CountTokensResponse,
+  EmbedContentResponse,
+  PromptFeedback,
+  SafetyRating,
+  SafetySetting,
+  FunctionDeclaration,
+  Schema,
+  FinishReason,
+  PartUnion,
+  PartListUnion,
+  SchemaUnion,
+  SendMessageParameters,
+  Type,
+  CallableTool,
+  mcpToTool,
+  toPartListUnion,
+  createUserContent,
+  Tool as GenAITool,
+} from './types/legacy-genai-types.js';
+export * from './compat/legacy-exports.js';
 
 // Export utilities
 export * from './utils/paths.js';
@@ -76,7 +109,7 @@ export * from './tools/write-file.js';
 export * from './tools/web-fetch.js';
 export * from './tools/memoryTool.js';
 export * from './tools/shell.js';
-export * from './tools/web-search.js';
+// web-search tool removed
 export * from './tools/read-many-files.js';
 export * from './tools/mcp-client.js';
 export * from './tools/mcp-tool.js';

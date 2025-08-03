@@ -18,7 +18,7 @@ import {
   FunctionCall,
   FunctionDeclaration,
   Type,
-} from '@google/genai';
+} from '../types/legacy-genai-types.js';
 
 type ToolParams = Record<string, unknown>;
 
