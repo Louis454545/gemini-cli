@@ -28,7 +28,8 @@ describe('aboutCommand', () => {
         },
         settings: {
           merged: {
-            selectedAuthType: 'test-auth',
+            // selectedAuthType: 'test-auth',
+            provider: 'google',
           },
         },
       },
@@ -76,8 +77,9 @@ describe('aboutCommand', () => {
         osVersion: 'test-os',
         sandboxEnv: 'no sandbox',
         modelVersion: 'test-model',
-        selectedAuthType: 'test-auth',
-        gcpProject: 'test-gcp-project',
+        provider: 'google',
+        // selectedAuthType: 'test-auth',
+        // gcpProject: 'test-gcp-project',
       },
       expect.any(Number),
     );
