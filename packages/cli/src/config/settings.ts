@@ -67,7 +67,6 @@ export interface AccessibilitySettings {
 export interface Settings {
   theme?: string;
   customThemes?: Record<string, CustomTheme>;
-  selectedAuthType?: AuthType;
   useExternalAuth?: boolean;
   sandbox?: boolean | string;
   coreTools?: string[];
@@ -141,6 +140,9 @@ export interface Settings {
   loadMemoryFromIncludeDirectories?: boolean;
 
   chatCompression?: ChatCompressionSettings;
+
+  // Add new provider field
+  provider?: string;
 }
 
 export interface SettingsError {

@@ -21,7 +21,6 @@ import { useTerminalSize } from './hooks/useTerminalSize.js';
 import { useGeminiStream } from './hooks/useGeminiStream.js';
 import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
-import { useAuthCommand } from './hooks/useAuthCommand.js';
 import { useEditorSettings } from './hooks/useEditorSettings.js';
 import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
 import { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';
@@ -61,6 +60,8 @@ import {
   AuthType,
   type IdeContext,
   ideContext,
+  getModelInstance,
+  ProviderId,
 } from '@google/gemini-cli-core';
 import {
   IdeIntegrationNudge,
@@ -94,6 +95,8 @@ import { PrivacyNotice } from './privacy/PrivacyNotice.js';
 import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from '../utils/events.js';
 import { isNarrowWidth } from './utils/isNarrowWidth.js';
+import { useProviderCommand } from './hooks/useProviderCommand.js';
+import { ProviderDialog } from './components/ProviderDialog.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 
@@ -238,35 +241,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   } = useThemeCommand(settings, setThemeError, addItem);
 
   const {
-    isAuthDialogOpen,
-    openAuthDialog,
-    handleAuthSelect,
-    isAuthenticating,
-    cancelAuthentication,
-  } = useAuthCommand(settings, setAuthError, config);
-
-  useEffect(() => {
-    if (settings.merged.selectedAuthType && !settings.merged.useExternalAuth) {
-      const error = validateAuthMethod(settings.merged.selectedAuthType);
-      if (error) {
-        setAuthError(error);
-        openAuthDialog();
-      }
-    }
-  }, [
-    settings.merged.selectedAuthType,
-    settings.merged.useExternalAuth,
-    openAuthDialog,
-    setAuthError,
-  ]);
-
-  // Sync user tier from config when authentication changes
-  useEffect(() => {
-    // Only sync when not currently authenticating
-    if (!isAuthenticating) {
-      setUserTier(config.getGeminiClient()?.getUserTier());
-    }
-  }, [config, isAuthenticating]);
+    isProviderDialogOpen,
+    openProviderDialog,
+    handleProviderSelect,
+    isSaving,
+    apiKey,
+  } = useProviderCommand(settings, setAuthError);
 
   const {
     isEditorDialogOpen,
@@ -466,8 +446,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const onAuthError = useCallback(() => {
     setAuthError('reauth required');
-    openAuthDialog();
-  }, [openAuthDialog, setAuthError]);
+    openProviderDialog();
+  }, [openProviderDialog, setAuthError]);
 
   // Core hooks and processors
   const {
@@ -491,7 +471,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     refreshStatic,
     setDebugMessage,
     openThemeDialog,
-    openAuthDialog,
+    openProviderDialog,
     openEditorDialog,
     toggleCorgiMode,
     setQuittingMessages,
@@ -526,7 +506,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     pendingHistoryItems: pendingGeminiHistoryItems,
     thought,
   } = useGeminiStream(
-    config.getGeminiClient(),
+    modelInstance,
+    provider,
+    model,
+    apiKey,
     history,
     addItem,
     config,
@@ -770,7 +753,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       initialPrompt &&
       !initialPromptSubmitted.current &&
       !isAuthenticating &&
-      !isAuthDialogOpen &&
+      !isProviderDialogOpen &&
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !showPrivacyNotice &&
@@ -783,7 +766,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     initialPrompt,
     submitQuery,
     isAuthenticating,
-    isAuthDialogOpen,
+    isProviderDialogOpen,
     isThemeDialogOpen,
     isEditorDialogOpen,
     showPrivacyNotice,
@@ -904,6 +887,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             />
           ) : shellConfirmationRequest ? (
             <ShellConfirmationDialog request={shellConfirmationRequest} />
+          ) : isProviderDialogOpen ? (
+            <ProviderDialog
+              onSelect={handleProviderSelect}
+              initialProvider={settings.merged.provider}
+              initialModel={settings.merged.model}
+              initialApiKey={apiKey}
+              errorMessage={authError}
+            />
           ) : isThemeDialogOpen ? (
             <Box flexDirection="column">
               {themeError && (
@@ -928,8 +919,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               <AuthInProgress
                 onTimeout={() => {
                   setAuthError('Authentication timed out. Please try again.');
-                  cancelAuthentication();
-                  openAuthDialog();
+                  // cancelAuthentication(); // This line is removed as per the new_code
+                  openProviderDialog();
                 }}
               />
               {showErrorDetails && (
@@ -947,14 +938,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 </OverflowProvider>
               )}
             </>
-          ) : isAuthDialogOpen ? (
-            <Box flexDirection="column">
-              <AuthDialog
-                onSelect={handleAuthSelect}
-                settings={settings}
-                initialErrorMessage={authError}
-              />
-            </Box>
           ) : isEditorDialogOpen ? (
             <Box flexDirection="column">
               {editorError && (

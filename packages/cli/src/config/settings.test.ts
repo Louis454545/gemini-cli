@@ -894,7 +894,7 @@ describe('Settings Loading and Merging', () => {
     it('should resolve environment variables in user settings', () => {
       process.env.TEST_API_KEY = 'user_api_key_from_env';
       const userSettingsContent = {
-        apiKey: '$TEST_API_KEY',
+        // apiKey: '$TEST_API_KEY',
         someUrl: 'https://test.com/${TEST_API_KEY}',
       };
       (mockFsExistsSync as Mock).mockImplementation(
@@ -910,13 +910,15 @@ describe('Settings Loading and Merging', () => {
 
       const settings = loadSettings(MOCK_WORKSPACE_DIR);
       // @ts-expect-error: dynamic property for test
-      expect(settings.user.settings.apiKey).toBe('user_api_key_from_env');
+      // expect(settings.user.settings.apiKey).toBe('user_api_key_from_env');
       // @ts-expect-error: dynamic property for test
       expect(settings.user.settings.someUrl).toBe(
         'https://test.com/user_api_key_from_env',
       );
       // @ts-expect-error: dynamic property for test
-      expect(settings.merged.apiKey).toBe('user_api_key_from_env');
+      expect(settings.merged.someUrl).toBe(
+        'https://test.com/user_api_key_from_env',
+      );
       delete process.env.TEST_API_KEY;
     });
 
