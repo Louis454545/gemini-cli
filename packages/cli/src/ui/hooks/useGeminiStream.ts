@@ -8,13 +8,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useInput } from 'ink';
 import {
   Config,
-  GeminiClient,
-  GeminiEventType as ServerGeminiEventType,
-  ServerGeminiStreamEvent as GeminiEvent,
-  ServerGeminiContentEvent as ContentEvent,
-  ServerGeminiErrorEvent as ErrorEvent,
-  ServerGeminiChatCompressedEvent,
-  ServerGeminiFinishedEvent,
   getErrorMessage,
   isNodeError,
   MessageSenderType,
@@ -55,6 +48,8 @@ import {
   TrackedCancelledToolCall,
 } from './useReactToolScheduler.js';
 import { useSessionStats } from '../contexts/SessionContext.js';
+import { generateText, streamText } from 'ai';
+import { getModelInstance, ProviderId } from '../../providers';
 
 export function mergePartListUnions(list: PartListUnion[]): PartListUnion {
   const resultParts: PartListUnion = [];
@@ -79,7 +74,10 @@ enum StreamProcessingStatus {
  * API interaction, and tool call lifecycle.
  */
 export const useGeminiStream = (
-  geminiClient: GeminiClient,
+  modelInstance: ReturnType<typeof getModelInstance>,
+  provider: ProviderId,
+  model: string,
+  apiKey: string,
   history: HistoryItem[],
   addItem: UseHistoryManagerReturn['addItem'],
   config: Config,
@@ -157,7 +155,10 @@ export const useGeminiStream = (
     onExec,
     onDebugMessage,
     config,
-    geminiClient,
+    modelInstance,
+    provider,
+    model,
+    apiKey,
   );
 
   const streamingState = useMemo(() => {
@@ -331,7 +332,7 @@ export const useGeminiStream = (
 
   const handleContentEvent = useCallback(
     (
-      eventValue: ContentEvent['value'],
+      eventValue: string,
       currentGeminiMessageBuffer: string,
       userMessageTimestamp: number,
     ): string => {
@@ -423,7 +424,7 @@ export const useGeminiStream = (
   );
 
   const handleErrorEvent = useCallback(
-    (eventValue: ErrorEvent['value'], userMessageTimestamp: number) => {
+    (eventValue: string, userMessageTimestamp: number) => {
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -432,7 +433,7 @@ export const useGeminiStream = (
         {
           type: MessageType.ERROR,
           text: parseAndFormatApiError(
-            eventValue.error,
+            eventValue,
             config.getContentGeneratorConfig()?.authType,
             undefined,
             config.getModel(),
@@ -447,10 +448,10 @@ export const useGeminiStream = (
   );
 
   const handleFinishedEvent = useCallback(
-    (event: ServerGeminiFinishedEvent, userMessageTimestamp: number) => {
-      const finishReason = event.value;
+    (event: string, userMessageTimestamp: number) => {
+      const finishReason = event;
 
-      const finishReasonMessages: Record<FinishReason, string | undefined> = {
+      const finishReasonMessages: Record<string, string | undefined> = {
         [FinishReason.FINISH_REASON_UNSPECIFIED]: undefined,
         [FinishReason.STOP]: undefined,
         [FinishReason.MAX_TOKENS]: 'Response truncated due to token limits.',
@@ -487,7 +488,7 @@ export const useGeminiStream = (
   );
 
   const handleChatCompressionEvent = useCallback(
-    (eventValue: ServerGeminiChatCompressedEvent['value']) =>
+    (eventValue: string) =>
       addItem(
         {
           type: 'info',
@@ -528,50 +529,50 @@ export const useGeminiStream = (
 
   const processGeminiStreamEvents = useCallback(
     async (
-      stream: AsyncIterable<GeminiEvent>,
+      stream: AsyncIterable<string>,
       userMessageTimestamp: number,
       signal: AbortSignal,
     ): Promise<StreamProcessingStatus> => {
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
       for await (const event of stream) {
-        switch (event.type) {
-          case ServerGeminiEventType.Thought:
-            setThought(event.value);
+        switch (event) {
+          case 'Thought':
+            setThought(event);
             break;
-          case ServerGeminiEventType.Content:
+          case 'Content':
             geminiMessageBuffer = handleContentEvent(
-              event.value,
+              event,
               geminiMessageBuffer,
               userMessageTimestamp,
             );
             break;
-          case ServerGeminiEventType.ToolCallRequest:
-            toolCallRequests.push(event.value);
+          case 'ToolCallRequest':
+            toolCallRequests.push(event);
             break;
-          case ServerGeminiEventType.UserCancelled:
+          case 'UserCancelled':
             handleUserCancelledEvent(userMessageTimestamp);
             break;
-          case ServerGeminiEventType.Error:
-            handleErrorEvent(event.value, userMessageTimestamp);
+          case 'Error':
+            handleErrorEvent(event, userMessageTimestamp);
             break;
-          case ServerGeminiEventType.ChatCompressed:
-            handleChatCompressionEvent(event.value);
+          case 'ChatCompressed':
+            handleChatCompressionEvent(event);
             break;
-          case ServerGeminiEventType.ToolCallConfirmation:
-          case ServerGeminiEventType.ToolCallResponse:
+          case 'ToolCallConfirmation':
+          case 'ToolCallResponse':
             // do nothing
             break;
-          case ServerGeminiEventType.MaxSessionTurns:
+          case 'MaxSessionTurns':
             handleMaxSessionTurnsEvent();
             break;
-          case ServerGeminiEventType.Finished:
+          case 'Finished':
             handleFinishedEvent(
-              event as ServerGeminiFinishedEvent,
+              event,
               userMessageTimestamp,
             );
             break;
-          case ServerGeminiEventType.LoopDetected:
+          case 'LoopDetected':
             // handle later because we want to move pending history to history
             // before we add loop detected message to history
             loopDetectedRef.current = true;
@@ -648,10 +649,42 @@ export const useGeminiStream = (
       setInitError(null);
 
       try {
-        const stream = geminiClient.sendMessageStream(
-          queryToSend,
-          abortSignal,
-          prompt_id!,
+        const stream = streamText(
+          modelInstance,
+          {
+            messages: [
+              {
+                role: 'user',
+                content: queryToSend,
+              },
+            ],
+            model: model,
+            apiKey: apiKey,
+            onMessage: (message) => {
+              if (message.role === 'assistant') {
+                handleContentEvent(message.content, '', userMessageTimestamp);
+              }
+            },
+            onError: (error) => {
+              handleErrorEvent(error.message, userMessageTimestamp);
+            },
+            onFinish: (reason) => {
+              handleFinishedEvent(reason, userMessageTimestamp);
+            },
+            onChatCompressed: (compressed) => {
+              handleChatCompressionEvent(compressed);
+            },
+            onMaxSessionTurns: () => {
+              handleMaxSessionTurnsEvent();
+            },
+            onLoopDetected: () => {
+              handleLoopDetectedEvent();
+            },
+          },
+          {
+            signal: abortSignal,
+            prompt_id: prompt_id!,
+          },
         );
         const processingStatus = await processGeminiStreamEvents(
           stream,
@@ -702,7 +735,9 @@ export const useGeminiStream = (
       addItem,
       setPendingHistoryItem,
       setInitError,
-      geminiClient,
+      modelInstance,
+      model,
+      apiKey,
       onAuthError,
       config,
       startNewPrompt,
@@ -778,7 +813,7 @@ export const useGeminiStream = (
       );
 
       if (allToolsCancelled) {
-        if (geminiClient) {
+        if (modelInstance) {
           // We need to manually add the function responses to the history
           // so the model knows the tools were cancelled.
           const responsesToAdd = geminiTools.flatMap(
@@ -794,7 +829,7 @@ export const useGeminiStream = (
               combinedParts.push(response);
             }
           }
-          geminiClient.addHistory({
+          modelInstance.addHistory({
             role: 'user',
             parts: combinedParts,
           });
@@ -837,7 +872,7 @@ export const useGeminiStream = (
       isResponding,
       submitQuery,
       markToolsAsSubmitted,
-      geminiClient,
+      modelInstance,
       performMemoryRefresh,
       modelSwitchedFromQuotaError,
     ],
@@ -912,7 +947,7 @@ export const useGeminiStream = (
             const toolName = toolCall.request.name;
             const fileName = path.basename(filePath);
             const toolCallWithSnapshotFileName = `${timestamp}-${fileName}-${toolName}.json`;
-            const clientHistory = await geminiClient?.getHistory();
+            const clientHistory = await modelInstance?.getHistory();
             const toolCallWithSnapshotFilePath = path.join(
               checkpointDir,
               toolCallWithSnapshotFileName,
@@ -946,7 +981,7 @@ export const useGeminiStream = (
       }
     };
     saveRestorableToolCalls();
-  }, [toolCalls, config, onDebugMessage, gitService, history, geminiClient]);
+  }, [toolCalls, config, onDebugMessage, gitService, history, modelInstance]);
 
   return {
     streamingState,

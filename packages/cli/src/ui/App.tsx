@@ -60,6 +60,8 @@ import {
   AuthType,
   type IdeContext,
   ideContext,
+  getModelInstance,
+  ProviderId,
 } from '@google/gemini-cli-core';
 import {
   IdeIntegrationNudge,
@@ -504,7 +506,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     pendingHistoryItems: pendingGeminiHistoryItems,
     thought,
   } = useGeminiStream(
-    config.getGeminiClient(),
+    modelInstance,
+    provider,
+    model,
+    apiKey,
     history,
     addItem,
     config,
