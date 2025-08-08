@@ -33,7 +33,7 @@ import { ShellModeIndicator } from './components/ShellModeIndicator.js';
 import { InputPrompt } from './components/InputPrompt.js';
 import { Footer } from './components/Footer.js';
 import { ThemeDialog } from './components/ThemeDialog.js';
-import { AuthDialog } from './components/AuthDialog.js';
+import { ProviderDialog, ProviderDialogResult } from './components/ProviderDialog.js';
 import { AuthInProgress } from './components/AuthInProgress.js';
 import { EditorSettingsDialog } from './components/EditorSettingsDialog.js';
 import { ShellConfirmationDialog } from './components/ShellConfirmationDialog.js';
@@ -240,7 +240,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const {
     isAuthDialogOpen,
     openAuthDialog,
-    handleAuthSelect,
+    handleProviderSubmit,
     isAuthenticating,
     cancelAuthentication,
   } = useAuthCommand(settings, setAuthError, config);
@@ -949,10 +949,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             </>
           ) : isAuthDialogOpen ? (
             <Box flexDirection="column">
-              <AuthDialog
-                onSelect={handleAuthSelect}
-                settings={settings}
-                initialErrorMessage={authError}
+              <ProviderDialog
+                onSubmit={(result: ProviderDialogResult | null) => handleProviderSubmit(result as any, SettingScope.User)}
               />
             </Box>
           ) : isEditorDialogOpen ? (

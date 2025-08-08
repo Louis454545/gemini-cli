@@ -38,7 +38,7 @@ export class StartSessionEvent {
     let useVertex = false;
     if (generatorConfig && generatorConfig.authType) {
       useGemini = generatorConfig.authType === AuthType.USE_GEMINI;
-      useVertex = generatorConfig.authType === AuthType.USE_VERTEX_AI;
+      useVertex = false;
     }
 
     this['event.name'] = 'cli_config';
