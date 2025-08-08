@@ -41,6 +41,7 @@ import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { checkForUpdates } from './ui/utils/updateCheck.js';
 import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from './utils/events.js';
+import { PrivacyNotice } from './ui/privacy/PrivacyNotice.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -234,7 +235,7 @@ export async function main() {
   }
 
   if (
-    settings.merged.selectedAuthType === AuthType.LOGIN_WITH_GOOGLE &&
+    settings.merged.selectedAuthType === AuthType.USE_GEMINI &&
     config.isBrowserLaunchSuppressed()
   ) {
     // Do oauth before app renders to make copying the link possible.
@@ -301,13 +302,15 @@ export async function main() {
     prompt_length: input.length,
   });
 
-  const nonInteractiveConfig = await validateNonInteractiveAuth(
+  const isValid = validateNonInteractiveAuth(
     settings.merged.selectedAuthType,
-    settings.merged.useExternalAuth,
-    config,
   );
+  if (!isValid) {
+    console.error('Non-interactive mode requires GEMINI_API_KEY auth.');
+    process.exit(1);
+  }
 
-  await runNonInteractive(nonInteractiveConfig, input, prompt_id);
+  await runNonInteractive(config, input, prompt_id);
   process.exit(0);
 }
 

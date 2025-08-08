@@ -13,6 +13,9 @@ import {
   getErrorMessage,
 } from '@google/gemini-cli-core';
 import { runExitCleanup } from '../../utils/cleanup.js';
+import keytar from 'keytar';
+
+const SERVICE_NAME = 'gemini-cli';
 
 export const useAuthCommand = (
   settings: LoadedSettings,
@@ -51,31 +54,34 @@ export const useAuthCommand = (
     void authFlow();
   }, [isAuthDialogOpen, settings, config, setAuthError, openAuthDialog]);
 
-  const handleAuthSelect = useCallback(
-    async (authType: AuthType | undefined, scope: SettingScope) => {
-      if (authType) {
-        await clearCachedCredentialFile();
-
-        settings.setValue(scope, 'selectedAuthType', authType);
-        if (
-          authType === AuthType.LOGIN_WITH_GOOGLE &&
-          config.isBrowserLaunchSuppressed()
-        ) {
-          runExitCleanup();
-          console.log(
-            `
-----------------------------------------------------------------
-Logging in with Google... Please restart Gemini CLI to continue.
-----------------------------------------------------------------
-            `,
-          );
-          process.exit(0);
-        }
+  const handleProviderSubmit = useCallback(
+    async (result: { provider: 'google'; model: string; apiKey: string } | null, scope: SettingScope) => {
+      if (!result) {
+        setIsAuthDialogOpen(false);
+        return;
       }
+
+      // Persist API key securely
+      try {
+        await keytar.setPassword(SERVICE_NAME, result.provider, result.apiKey);
+        process.env.GEMINI_API_KEY = result.apiKey;
+      } catch (err) {
+        setAuthError(
+          'Failed to save API key securely. Please ensure keytar is supported on your system.',
+        );
+        return;
+      }
+
+      // Persist model selection
+      settings.setValue(scope, 'model', result.model);
+
+      // Select auth type (Gemini API key flow)
+      settings.setValue(scope, 'selectedAuthType', AuthType.USE_GEMINI);
+
       setIsAuthDialogOpen(false);
       setAuthError(null);
     },
-    [settings, setAuthError, config],
+    [settings, setAuthError],
   );
 
   const cancelAuthentication = useCallback(() => {
@@ -85,7 +91,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
   return {
     isAuthDialogOpen,
     openAuthDialog,
-    handleAuthSelect,
+    handleProviderSubmit,
     isAuthenticating,
     cancelAuthentication,
   };
